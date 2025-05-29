@@ -36,29 +36,19 @@ getgenv().settings = {
 local expand_delay = 1
 local craft_delay = 1
 
-local function updateResourceList()
-    local foundResources = {}
-    local plots = game:GetService("Workspace"):WaitForChild("Plots")
-    
-    -- Сканируем все острова на наличие ресурсов
-    for _, plot in ipairs(plots:GetChildren()) do
-        if plot:FindFirstChild("Resources") then
-            for _, resource in ipairs(plot.Resources:GetChildren()) do
-                if not table.find(foundResources, resource.Name) then
-                    table.insert(foundResources, resource.Name)
-                    -- Если ресурс новый, добавляем его в настройки
-                    if resourceSettings[resource.Name] == nil then
-                        resourceSettings[resource.Name] = true -- По умолчанию включен
-                    end
-                end
-            end
+local function safeGet(parent, name, class, timeout)
+    timeout = timeout or 5
+    local start = os.clock()
+    local obj
+    repeat
+        obj = parent:FindFirstChild(name, true)
+        if obj and (not class or obj:IsA(class)) then
+            return obj
         end
-    end
-    
-    return foundResources
+        task.wait(0.1)
+    until os.clock() - start > timeout
+    return nil
 end
-
-local availableResources = updateResourceList()
 
 for _, resName in ipairs(availableResources) do
     res:Toggle(resName, resourceSettings[resName], function(state)
