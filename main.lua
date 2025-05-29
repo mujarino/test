@@ -2,7 +2,6 @@ local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Br
 local m = lib:Window("Build An Island")
 local bi = lib:Window("Buy Items")
 local s = lib:Window("Settings")
-local res = lib:Window("Resource Filter")
 
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
@@ -11,7 +10,6 @@ local plot = game:GetService("Workspace"):WaitForChild("Plots"):WaitForChild(plr
 local land = plot:FindFirstChild("Land")
 local resources = plot:WaitForChild("Resources")
 local expand = plot:WaitForChild("Expand")
-local cachedResourceNames = {}
 
 local TurtleLib = game:GetService("CoreGui"):FindFirstChild("TurtleUiLib")
 local MAX_CONCURRENT_REQUESTS = 50
@@ -35,51 +33,6 @@ getgenv().settings = {
 
 local expand_delay = 1
 local craft_delay = 1
-
-local function safeGet(parent, name, class, timeout)
-    timeout = timeout or 5
-    local start = os.clock()
-    local obj
-    repeat
-        obj = parent:FindFirstChild(name, true)
-        if obj and (not class or obj:IsA(class)) then
-            return obj
-        end
-        task.wait(0.1)
-    until os.clock() - start > timeout
-    return nil
-end
-
-for _, resName in ipairs(availableResources) do
-    res:Toggle(resName, resourceSettings[resName], function(state)
-        resourceSettings[resName] = state
-    end)
-end
-
-local function getFilteredResources()
-    local filteredResources = {}
-    local plots = game:GetService("Workspace"):WaitForChild("Plots")
-    
-    for _, plot in ipairs(plots:GetChildren()) do
-        if plot:FindFirstChild("Resources") then
-            for _, resource in ipairs(plot.Resources:GetChildren()) do
-                -- Проверяем, включен ли этот тип ресурса в настройках
-                if resourceSettings[resource.Name] then
-                    table.insert(filteredResources, resource)
-                end
-            end
-        end
-    end
-    
-    return filteredResources
-end
-
-updateResourceCache()
-for name in pairs(cachedResourceNames) do
-    res:Toggle(name, true, function(state)
-        resourceSettings[name] = state
-    end)
-end
 
 -- Функция для получения всех ресурсов в мире
 local function getAllResources()
@@ -106,11 +59,11 @@ local function getAllResources()
 end
 
 local function instantFarmAll()
-    local MAX_CONCURRENT = 20
-    local resourcesToFarm = getFilteredResources()
+    local MAX_CONCURRENT = 25 -- Ограничение одновременных запросов
+    local allResources = getAllResources()
     local activeTasks = 0
     
-    for _, r in ipairs(resourcesToFarm) do
+    for _, r in ipairs(allResources) do
         while activeTasks >= MAX_CONCURRENT do
             task.wait()
         end
@@ -123,33 +76,12 @@ local function instantFarmAll()
             activeTasks -= 1
         end)
     end
-end
-
-m:Toggle("Burst Farm (Smart)", settings.instantFarm, function(b)
-    settings.instantFarm = b
-    if b then
-        task.spawn(function()
-            while settings.instantFarm do
-                -- Обновляем список ресурсов перед каждой серией
-                updateResourceList()
-                
-                -- Выполняем серию из 5 быстрых сборов
-                for i = 1, 5 do
-                    if not settings.instantFarm then break end
-                    instantFarmAll()
-                    task.wait(0.3) -- Короткая пауза между сборами
-                end
-                
-                -- Пауза после серии
-                local waitTime = settings.instantFarmDelay
-                while waitTime > 0 and settings.instantFarm do
-                    task.wait(1)
-                    waitTime = waitTime - 1
-                end
-            end
-        end)
+    
+    -- Ждем завершения всех задач
+    while activeTasks > 0 do
+        task.wait()
     end
-end)
+end
 
 m:Toggle("Burst Farm (5x)", settings.instantFarm, function(b)
     settings.instantFarm = b
@@ -418,7 +350,7 @@ end)
 
 s:Box("Burst Delay (sec)", function(t)
     local num = tonumber(t)
-    if num and num > 0 then
+    if num and num >= 0 then
         settings.instantFarmDelay = num
     end
 end)
