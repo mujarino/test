@@ -2,6 +2,7 @@ local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Br
 local m = lib:Window("Build An Island")
 local bi = lib:Window("Buy Items")
 local s = lib:Window("Settings")
+local res = lib:Window("Resource Filter")
 
 local Players = game:GetService("Players")
 local plr = Players.LocalPlayer
@@ -12,7 +13,9 @@ local resources = plot:WaitForChild("Resources")
 local expand = plot:WaitForChild("Expand")
 
 local TurtleLib = game:GetService("CoreGui"):FindFirstChild("TurtleUiLib")
-local MAX_CONCURRENT_REQUESTS = 50
+local MAX_CONCURRENT_REQUESTS = 25
+
+getgenv().resourceSettings = {}
 
 getgenv().settings = {
     farm = false,
@@ -34,15 +37,44 @@ getgenv().settings = {
 local expand_delay = 1
 local craft_delay = 1
 
--- Функция для получения всех ресурсов в мире
-local function getAllResources()
-    local allResources = {}
+-- Автоматическое определение типов ресурсов
+local function scanResourceTypes()
+    local resourceTypes = {}
     local plots = game:GetService("Workspace"):WaitForChild("Plots")
     
     for _, plot in ipairs(plots:GetChildren()) do
         if plot:FindFirstChild("Resources") then
             for _, resource in ipairs(plot.Resources:GetChildren()) do
-                table.insert(allResources, resource)
+                if not table.find(resourceTypes, resource.Name) then
+                    table.insert(resourceTypes, resource.Name)
+                    if resourceSettings[resource.Name] == nil then
+                        resourceSettings[resource.Name] = true -- По умолчанию включен
+                    end
+                end
+            end
+        end
+    end
+    
+    return resourceTypes
+end
+
+local availableResources = scanResourceTypes()
+for _, resName in ipairs(availableResources) do
+    res:Toggle(resName, resourceSettings[resName], function(state)
+        resourceSettings[resName] = state
+    end)
+end
+
+local function getFilteredResources()
+    local filteredResources = {}
+    local plots = game:GetService("Workspace"):WaitForChild("Plots")
+    
+    for _, plot in ipairs(plots:GetChildren()) do
+        if plot:FindFirstChild("Resources") then
+            for _, resource in ipairs(plot.Resources:GetChildren()) do
+                if resourceSettings[resource.Name] then
+                    table.insert(filteredResources, resource)
+                end
             end
         end
     end
@@ -51,11 +83,38 @@ local function getAllResources()
     local worldResources = workspace:FindFirstChild("WorldResources") or workspace:FindFirstChild("GlobalResources")
     if worldResources then
         for _, resource in ipairs(worldResources:GetChildren()) do
-            table.insert(allResources, resource)
+            if resourceSettings[resource.Name] then
+                table.insert(filteredResources, resource)
+            end
         end
     end
     
-    return allResources
+    return filteredResources
+end
+
+-- Функция для получения всех ресурсов в мире
+local function instantFarmAll()
+    local MAX_CONCURRENT = 25
+    local resourcesToFarm = getFilteredResources()
+    local activeTasks = 0
+    
+    for _, r in ipairs(resourcesToFarm) do
+        while activeTasks >= MAX_CONCURRENT do
+            task.wait()
+        end
+        
+        activeTasks += 1
+        task.spawn(function()
+            pcall(function()
+                game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("HitResource"):FireServer(r)
+            end)
+            activeTasks -= 1
+        end)
+    end
+    
+    while activeTasks > 0 do
+        task.wait()
+    end
 end
 
 local function instantFarmAll()
@@ -88,14 +147,12 @@ m:Toggle("Burst Farm (5x)", settings.instantFarm, function(b)
     if b then
         task.spawn(function()
             while settings.instantFarm do
-                -- Выполняем серию из 5 быстрых сборов
                 for i = 1, settings.instantFarmBursts do
                     if not settings.instantFarm then break end
-                    instantFarmAll()
-                    task.wait(0.5) -- Короткая пауза между сборами в серии
+                    instantFarmAll() -- Теперь использует фильтрацию
+                    task.wait(0.5)
                 end
                 
-                -- Большая пауза после серии сборов
                 local waitTime = settings.instantFarmDelay
                 while waitTime > 0 and settings.instantFarm do
                     task.wait(1)
@@ -142,8 +199,8 @@ m:Toggle("Auto Farm ALL Resources", settings.farmAll, function(b)
     settings.farmAll = b
     task.spawn(function()
         while settings.farmAll do
-            local allResources = getAllResources()
-            for _, r in ipairs(allResources) do
+            local filteredResources = getFilteredResources() -- Используем фильтрацию
+            for _, r in ipairs(filteredResources) do
                 game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("HitResource"):FireServer(r)
                 task.wait(.01)
             end
