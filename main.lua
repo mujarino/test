@@ -22,7 +22,7 @@ getgenv().settings = {
     farmAll = false,
     farmAllInstant = false,
     instantFarm = false,
-    instantFarmDelay = 15,
+    instantFarmDelay = 18,
     instantFarmBursts = 5,
     expand = false,
     craft = false,
@@ -266,13 +266,24 @@ m:Toggle("Auto Sell", settings.sell, function(b)
         while settings.sell do
             for _, crop in pairs(plr.Backpack:GetChildren()) do
                 if crop:GetAttribute("Sellable") then
-                    local a = {
-                        false,
-                        {
-                            crop:GetAttribute("Hash")
+                    -- Проверяем, что это не зелье (может быть несколько условий)
+                    local isPotion = false
+                    
+                    -- Проверка по названию (если зелья содержат "Potion" в названии)
+                    if crop.Name:match("Potion") then
+                        isPotion = true
+                    end
+                    
+                    -- Продаем только если это не зелье
+                    if not isPotion then
+                        local a = {
+                            false,
+                            {
+                                crop:GetAttribute("Hash")
+                            }
                         }
-                    }
-                    game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("SellToMerchant"):FireServer(unpack(a))
+                        game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("SellToMerchant"):FireServer(unpack(a))
+                    end
                 end
             end
             task.wait(1)
