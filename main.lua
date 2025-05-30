@@ -117,42 +117,19 @@ local function instantFarmAll()
     end
 end
 
-local function instantFarmAll()
-    local MAX_CONCURRENT = 25 -- Ограничение одновременных запросов
-    local allResources = getAllResources()
-    local activeTasks = 0
-    
-    for _, r in ipairs(allResources) do
-        while activeTasks >= MAX_CONCURRENT do
-            task.wait()
-        end
-        
-        activeTasks += 1
-        task.spawn(function()
-            pcall(function()
-                game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("HitResource"):FireServer(r)
-            end)
-            activeTasks -= 1
-        end)
-    end
-    
-    -- Ждем завершения всех задач
-    while activeTasks > 0 do
-        task.wait()
-    end
-end
-
 m:Toggle("Burst Farm (5x)", settings.instantFarm, function(b)
     settings.instantFarm = b
     if b then
         task.spawn(function()
             while settings.instantFarm do
+                -- Выполняем серию из 5 быстрых сборов
                 for i = 1, settings.instantFarmBursts do
                     if not settings.instantFarm then break end
-                    instantFarmAll() -- Теперь использует фильтрацию
-                    task.wait(0.5)
+                    instantFarmAll() -- Используем исправленную функцию
+                    task.wait(0.3) -- Уменьшенная задержка между волнами
                 end
                 
+                -- Большая пауза после серии сборов
                 local waitTime = settings.instantFarmDelay
                 while waitTime > 0 and settings.instantFarm do
                     task.wait(1)
