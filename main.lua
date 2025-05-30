@@ -22,7 +22,7 @@ getgenv().settings = {
     farmAll = false,
     farmAllInstant = false,
     instantFarm = false,
-    instantFarmDelay = 10,
+    instantFarmDelay = 15,
     instantFarmBursts = 5,
     expand = false,
     craft = false,
@@ -385,13 +385,6 @@ end)
 s:Box("Burst Delay (sec)", function(t)
     local num = tonumber(t)
     if num and num >= 0 then
-        settings.instantFarmDelay = num
-    end
-end)
-
-s:Box("Instant Farm Delay (sec)", function(t)
-    local num = tonumber(t)
-    if num and num > 0 then
         settings.instantFarmDelay = num
     end
 end)
