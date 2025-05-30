@@ -48,33 +48,22 @@ local function scanResourceTypes()
                 if not table.find(resourceTypes, resource.Name) then
                     table.insert(resourceTypes, resource.Name)
                     if resourceSettings[resource.Name] == nil then
-                        resourceSettings[resource.Name] = true
+                        resourceSettings[resource.Name] = true -- По умолчанию включен
                     end
                 end
             end
         end
     end
-
+    
     return resourceTypes
 end
 
-local function createResourceToggles()
-    for _, child in pairs(res:GetChildren()) do
-        if child:IsA("TextButton") and child.Name ~= "UpdateBtn" then
-            child:Destroy()
-        end
-    end
-
-    local availableResources = scanResourceTypes()
-    
-    for _, resName in ipairs(availableResources) do
-        res:Toggle(resName, resourceSettings[resName], function(state)
-            resourceSettings[resName] = state
-        end)
-    end
+local availableResources = scanResourceTypes()
+for _, resName in ipairs(availableResources) do
+    res:Toggle(resName, resourceSettings[resName], function(state)
+        resourceSettings[resName] = state
+    end)
 end
-
-createResourceToggles()
 
 local function getFilteredResources()
     local filteredResources = {}
@@ -430,10 +419,16 @@ end)
 
 s:Label("~ t.me/arceusxscripts", Color3.fromRGB(127, 143, 166))
 
-if not res:FindFirstChild("UpdateBtn") then
-    res:Button("⟳ Update resources", function()
-        createResourceToggles()
-    end)
-end
+res:Button("Update Resources", function()
+    local newResources = scanResourceTypes()
+    for _, resName in ipairs(newResources) do
+        if not resourceSettings[resName] then
+            resourceSettings[resName] = true
+            res:Toggle(resName, true, function(state)
+                resourceSettings[resName] = state
+            end)
+        end
+    end
+end)
 
 lib:Keybind("LeftControl")
