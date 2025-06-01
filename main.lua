@@ -1,16 +1,22 @@
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/shlexware/Rayfield/main/source'))()
 
 local Window = Rayfield:CreateWindow({
-	Name = "Rayfield Example Window",
-	LoadingTitle = "Rayfield Interface Suite",
-	LoadingSubtitle = "by Sirius",
+	Name = "Rayfield Test Window",
+	LoadingTitle = "Please Wait",
+	LoadingSubtitle = "Rayfield Example",
 	ConfigurationSaving = {
-		Enabled = true,
-		FolderName = "Rayfield Interface Suite",
-		FileName = "Big Hub"
+		Enabled = false
 	},
 	KeySystem = false
 })
 
-local Tab = Window:CreateTab("Main Tab", 4483362458)
-Tab:CreateLabel("If you see this, Rayfield is working!")
+local Tab = Window:CreateTab("Main", 4483362458)
+
+Tab:CreateLabel("Hello! Rayfield is working!")
+
+Tab:CreateButton({
+	Name = "Click Me!",
+	Callback = function()
+		print("Button clicked!")
+	end,
+})
