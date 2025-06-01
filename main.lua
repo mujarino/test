@@ -294,6 +294,9 @@ BuildTab:CreateToggle("Auto Sell", settings.sell, function(b)
                     if crop.Name:match("Potion") then
                         isPotion = true
                     end
+                    if crop.Name:match("Seed") then
+                        isPotion = true
+                    end
                     
                     -- Продаем только если это не зелье
                     if not isPotion then
