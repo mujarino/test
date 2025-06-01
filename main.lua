@@ -1,3 +1,24 @@
+-- Переписано с Turtle UI Lib на Rayfield UI Lib
+local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/mujarino/test/refs/heads/main/Rayfield%20Lib%20Source.lua"))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "Island Automation",
+    LoadingTitle = "Island Script Loader",
+    LoadingSubtitle = "by Rayfield",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "IslandScriptData",
+        FileName = "Settings"
+    },
+    KeySystem = false
+})
+
+local BuildTab = Window:CreateTab("Build", 4483362458)
+local BuyTab = Window:CreateTab("Buy", 4483362458)
+local SettingsTab = Window:CreateTab("Settings", 4483362458)
+local FilterTab = Window:CreateTab("Filter", 4483362458)
+
+-- Переменные из оригинального кода:
 local lib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Lib/main/source.lua"))()
 local m = lib:Window("Build An Island")
 local bi = lib:Window("Buy Items")
@@ -60,7 +81,7 @@ end
 
 local availableResources = scanResourceTypes()
 for _, resName in ipairs(availableResources) do
-    res:Toggle(resName, resourceSettings[resName], function(state)
+    FilterTab:CreateToggle(resName, resourceSettings[resName], function(state)
         resourceSettings[resName] = state
     end)
 end
@@ -117,7 +138,7 @@ local function instantFarmAll()
     end
 end
 
-m:Toggle("Burst Farm (5x)", settings.instantFarm, function(b)
+BuildTab:CreateToggle("Burst Farm (5x)", settings.instantFarm, function(b)
     settings.instantFarm = b
     if b then
         task.spawn(function()
@@ -140,7 +161,7 @@ m:Toggle("Burst Farm (5x)", settings.instantFarm, function(b)
     end
 end)
 
-m:Toggle("INSTANT Farm All", settings.instantFarm, function(b)
+BuildTab:CreateToggle("INSTANT Farm All", settings.instantFarm, function(b)
     settings.instantFarm = b
     if b then
         task.spawn(function()
@@ -158,7 +179,7 @@ m:Toggle("INSTANT Farm All", settings.instantFarm, function(b)
 end)
 
 -- Оригинальная функция добычи (только ваш остров)
-m:Toggle("Auto Farm Resources", settings.farm, function(b)
+BuildTab:CreateToggle("Auto Farm Resources", settings.farm, function(b)
     settings.farm = b
     task.spawn(function()
         while settings.farm do
@@ -172,7 +193,7 @@ m:Toggle("Auto Farm Resources", settings.farm, function(b)
 end)
 
 -- Новая функция добычи всех ресурсов
-m:Toggle("Auto Farm ALL Resources", settings.farmAll, function(b)
+BuildTab:CreateToggle("Auto Farm ALL Resources", settings.farmAll, function(b)
     settings.farmAll = b
     task.spawn(function()
         while settings.farmAll do
@@ -187,7 +208,7 @@ m:Toggle("Auto Farm ALL Resources", settings.farmAll, function(b)
 end)
 
 -- Остальные функции остаются без изменений
-m:Toggle("Auto Expand Land", settings.expand, function(b)
+BuildTab:CreateToggle("Auto Expand Land", settings.expand, function(b)
     settings.expand = b
     task.spawn(function()
         while settings.expand do
@@ -215,7 +236,7 @@ m:Toggle("Auto Expand Land", settings.expand, function(b)
     end)
 end)
 
-m:Toggle("Auto Crafter", settings.craft, function(b)
+BuildTab:CreateToggle("Auto Crafter", settings.craft, function(b)
     settings.craft = b
     task.spawn(function()
         while settings.craft do
@@ -232,7 +253,7 @@ m:Toggle("Auto Crafter", settings.craft, function(b)
     end)
 end)
 
-m:Toggle("Auto Gold Mine", settings.gold, function(b)
+BuildTab:CreateToggle("Auto Gold Mine", settings.gold, function(b)
     settings.gold = b
     task.spawn(function()
         while settings.gold do
@@ -246,7 +267,7 @@ m:Toggle("Auto Gold Mine", settings.gold, function(b)
     end)
 end)
 
-m:Toggle("Auto Collect Gold", settings.collect, function(b)
+BuildTab:CreateToggle("Auto Collect Gold", settings.collect, function(b)
     settings.collect = b
     task.spawn(function()
         while settings.collect do
@@ -260,7 +281,7 @@ m:Toggle("Auto Collect Gold", settings.collect, function(b)
     end)
 end)
 
-m:Toggle("Auto Sell", settings.sell, function(b)
+BuildTab:CreateToggle("Auto Sell", settings.sell, function(b)
     settings.sell = b
     task.spawn(function()
         while settings.sell do
@@ -291,7 +312,7 @@ m:Toggle("Auto Sell", settings.sell, function(b)
     end)
 end)
 
-m:Toggle("Auto Harvest", settings.harvest, function(b)
+BuildTab:CreateToggle("Auto Harvest", settings.harvest, function(b)
     settings.harvest = b
     task.spawn(function()
         while settings.harvest do
@@ -303,7 +324,7 @@ m:Toggle("Auto Harvest", settings.harvest, function(b)
     end)
 end)
 
-m:Toggle("Auto Collect Hive", settings.hive, function(b)
+BuildTab:CreateToggle("Auto Collect Hive", settings.hive, function(b)
     settings.hive = b
     task.spawn(function()
         while settings.hive do
@@ -325,11 +346,11 @@ for _, item in ipairs(plr.PlayerGui.Main.Menus.Merchant.Inner.ScrollingFrame.Hol
 end
 
 local item = nil
-bi:Dropdown("Items", items, function(name)
+BuyTab:CreateDropdown("Items", items, function(name)
     item = name
 end)
 
-bi:Button("Buy Item", function()
+BuyTab:CreateButton("Buy Item", function()
     if item ~= nil then
         local a = {
             item,
@@ -339,7 +360,7 @@ bi:Button("Buy Item", function()
     end
 end)
 
-bi:Toggle("Auto Buy Item", false, function(b)
+BuyTab:CreateToggle("Auto Buy Item", false, function(b)
     settings.auto_buy = b
     task.spawn(function()
         while settings.auto_buy do
@@ -355,7 +376,7 @@ bi:Toggle("Auto Buy Item", false, function(b)
     end)
 end)
 
-bi:Label("New Items In 00:00", Color3.fromRGB(127, 143, 166))
+BuyTab:CreateLabel("New Items In 00:00", Color3.fromRGB(127, 143, 166))
 
 local timerUI = nil
 for _, child in ipairs(TurtleLib:GetDescendants()) do
@@ -378,7 +399,7 @@ pcall(function()
     end)
 end)
 
-s:Button("Anti AFK", function()
+SettingsTab:CreateButton("Anti AFK", function()
     local bb = game:GetService("VirtualUser")
     plr.Idled:connect(function()
         bb:CaptureController()
@@ -386,31 +407,31 @@ s:Button("Anti AFK", function()
     end)
 end)
 
-s:Box("Burst Count", function(t)
+SettingsTab:CreateInput("Burst Count", function(t)
     local num = tonumber(t)
     if num and num > 0 then
         settings.instantFarmBursts = num
     end
 end)
 
-s:Box("Burst Delay (sec)", function(t)
+SettingsTab:CreateInput("Burst Delay (sec)", function(t)
     local num = tonumber(t)
     if num and num >= 0 then
         settings.instantFarmDelay = num
     end
 end)
 
-s:Box("Expand Delay", function(t)
+SettingsTab:CreateInput("Expand Delay", function(t)
     expand_delay = t
 end)
 
-s:Box("Craft Delay", function(t)
+SettingsTab:CreateInput("Craft Delay", function(t)
     craft_delay = t
 end)
 
 s:Label("Press LeftControl to Hide UI", Color3.fromRGB(127, 143, 166))
 
-s:Button("Destroy Gui", function()
+SettingsTab:CreateButton("Destroy Gui", function()
     for k in pairs(settings) do
         settings[k] = false
     end
@@ -419,12 +440,12 @@ end)
 
 s:Label("~ t.me/arceusxscripts", Color3.fromRGB(127, 143, 166))
 
-res:Button("Update Resources", function()
+reSettingsTab:CreateButton("Update Resources", function()
     local newResources = scanResourceTypes()
     for _, resName in ipairs(newResources) do
         if not resourceSettings[resName] then
             resourceSettings[resName] = true
-            res:Toggle(resName, true, function(state)
+            FilterTab:CreateToggle(resName, true, function(state)
                 resourceSettings[resName] = state
             end)
         end
